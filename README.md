@@ -121,7 +121,8 @@ docker compose down
 ## 초기 버전 검증 상태
 
 - Compose 구성 파싱, IP 대역·중복, 웹서버 네트워크 분리, 셸 문법 검사를 통과했습니다.
-- 실제 이미지 빌드·컨테이너 기동은 아직 검증하지 않았습니다. 작성 환경에서 Docker 소켓 접근 권한이 제한되어 있으므로, 첫 실행 시 위 기본 틀 확인 절차를 수행하세요.
+- **2026-11-17 macOS / ARM64에서 기본 실행을 확인했습니다.** 문가원이 `docker compose up -d --build`를 실행한 후 Docker Desktop의 Logs·Inspect에서 네 컨테이너 실행, 웹서버 `healthy` 및 자체 HTTP 200 응답, 각 컨테이너의 네트워크·IP를 확인했습니다.
+- 방화벽 공통 초기화와 두 TODO 스크립트의 호출이 오류 없이 완료됐습니다. 확인 범위와 남은 검증은 [공통 환경 실행 기록](infra/README.md#기본-실행-확인--2026-11-17)에 정리했습니다. 다른 팀원의 PC에서도 최초 실행 확인은 필요합니다.
 - HTTP 정책과 관리자 인증은 담당자의 TODO이며, 기능 테스트와 캡처도 구현 후 진행합니다.
 
 공식 참고: [Docker 브리지](https://docs.docker.com/engine/network/drivers/bridge/) · [Docker Desktop 네트워크](https://docs.docker.com/desktop/features/networking/networking-how-tos/).
