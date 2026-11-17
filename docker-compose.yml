@@ -1,0 +1,77 @@
+name: network-security-project
+
+services:
+  firewall:
+    build: ./firewall
+    init: true
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      net.ipv4.ip_forward: "1"
+      net.ipv6.conf.all.disable_ipv6: "1"
+      net.ipv6.conf.default.disable_ipv6: "1"
+    environment:
+      FW_EXTERNAL_IP: ${FW_EXTERNAL_IP:?Copy .env.example to .env first}
+      FW_INTERNAL_IP: ${FW_INTERNAL_IP:?Copy .env.example to .env first}
+      WEB_IP: ${WEB_IP:?Copy .env.example to .env first}
+      ADMIN_IP: ${ADMIN_IP:?Copy .env.example to .env first}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-labadmin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    networks:
+      external_net:
+        ipv4_address: ${FW_EXTERNAL_IP:?Copy .env.example to .env first}
+      internal_net:
+        ipv4_address: ${FW_INTERNAL_IP:?Copy .env.example to .env first}
+
+  web:
+    build: ./web
+    networks:
+      internal_net:
+        ipv4_address: ${WEB_IP:?Copy .env.example to .env first}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    # ports를 추가하지 않습니다. 외부 클라이언트는 firewall을 거쳐야 합니다.
+
+  client-admin:
+    build:
+      context: ./infra
+      dockerfile: client.Dockerfile
+    init: true
+    environment:
+      FW_EXTERNAL_IP: ${FW_EXTERNAL_IP:?Copy .env.example to .env first}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-labadmin}
+    networks:
+      external_net:
+        ipv4_address: ${ADMIN_IP:?Copy .env.example to .env first}
+
+  client-guest:
+    build:
+      context: ./infra
+      dockerfile: client.Dockerfile
+    init: true
+    environment:
+      FW_EXTERNAL_IP: ${FW_EXTERNAL_IP:?Copy .env.example to .env first}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-labadmin}
+    networks:
+      external_net:
+        ipv4_address: ${GUEST_IP:?Copy .env.example to .env first}
+
+networks:
+  external_net:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: ${EXTERNAL_SUBNET:?Copy .env.example to .env first}
+          gateway: ${EXTERNAL_GATEWAY:?Copy .env.example to .env first}
+  internal_net:
+    driver: bridge
+    internal: true
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: ${INTERNAL_SUBNET:?Copy .env.example to .env first}
+          gateway: ${INTERNAL_GATEWAY:?Copy .env.example to .env first}

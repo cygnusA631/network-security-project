@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+*.log
+*.zip
+*.pem
+*.key
+ssh_host_*
+id_rsa*
+id_ed25519*
+.idea/
+.vscode/
