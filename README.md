@@ -8,11 +8,11 @@ Docker 외부망·내부망을 분리하고 방화벽을 거쳐 웹서버에 접
 
 | 담당 | 작업 위치 | 내용 |
 | --- | --- | --- |
-| 🐳 문가원 | `docker-compose.yml`, `infra/`, `firewall/Dockerfile`, `firewall/entrypoint.sh` | 네트워크·공통 실행 틀·전체 통합·GitHub 업로드 |
-| 🦫 길경은 | `web/` | Nginx TCP 80·확인용 HTML |
-| 🦊 임수영 | `firewall/policy/` | HTTP 포워딩·응답 경로·트래픽 차단 |
-| 🐢 정서윤 | `firewall/admin/`, `tests/` | 관리자 IP 제한·SSH ID/PW 인증·테스트·증빙 |
-| 🦜 이지민 | PPT·영상은 별도 전달 | 구성도·조건별 설명·시연·LMS 제출 |
+| 🐳 문가원  | `docker-compose.yml`, `infra/`, `firewall/Dockerfile`, `firewall/entrypoint.sh` | 네트워크·공통 실행 틀·전체 통합·GitHub 업로드 |
+| 🦫 길경은  | `web/` | Nginx TCP 80·확인용 HTML |
+| 🦊 임수영  | `firewall/policy/` | HTTP 포워딩·응답 경로·트래픽 차단 |
+| 🐢 정서윤  | `firewall/admin/`, `tests/` | 관리자 IP 제한·SSH ID/PW 인증·테스트·증빙 |
+| 🦜 이지민  | PPT·영상은 별도 전달 | 구성도·조건별 설명·시연·LMS 제출 |
 
 3번과 4번은 **하나의 방화벽 컨테이너**에서 동작합니다. 공통 파일 변경이 필요하면 가원에게 알려 주세요.
 
