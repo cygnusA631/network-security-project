@@ -1,0 +1,6 @@
+# 브라우저 시연 전용. 웹서버 대신 방화벽의 HTTP 포트만 로컬에 공개합니다.
+# docker compose -f docker-compose.yml -f docker-compose.browser.yml up -d --no-build --wait
+services:
+  firewall:
+    ports:
+      - "127.0.0.1:8080:80"

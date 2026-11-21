@@ -7,7 +7,7 @@ if [ ! -f /.dockerenv ]; then
     exit 1
 fi
 
-echo "[init] Preparing isolated firewall rules (scaffold)."
+echo "[init] Preparing isolated firewall rules."
 
 # 공통 초기화는 이 파일에서만 합니다. Docker의 DNS용 NAT 규칙은 보존합니다.
 iptables -w -P INPUT DROP
@@ -44,5 +44,5 @@ ensure_rule nat POSTROUTING -j TEAM_POSTROUTING
 /bin/sh /opt/firewall/policy/apply.sh
 /bin/sh /opt/firewall/admin/setup.sh
 
-echo "[ready] Hooks completed. Check TODOs above; this is not a finished firewall."
+echo "[ready] Firewall policy and admin setup completed."
 exec sleep infinity

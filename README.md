@@ -2,7 +2,7 @@
 
 Docker 외부망·내부망을 분리하고 방화벽을 거쳐 웹서버에 접근하는 네트워크 보안 수업 과제입니다.
 
-> **팀원 배포용 기본 틀입니다.** 컨테이너·네트워크·기본 웹페이지를 준비했습니다. HTTP 포워딩과 관리자 인증은 TODO이며, 초기 상태에서 방화벽 경유 HTTP·SSH 접속은 차단됩니다. 이를 과제 완성이나 보안 검증 완료로 판단하지 마세요.
+> 세 담당자의 웹서버·HTTP 정책·관리자 SSH 코드를 통합했습니다. 2026-11-21 로컬에서 인증·INPUT/FORWARD 차단·내부망 우회 방지 및 재생성 후 재검사까지 총 38개 자동 검사를 통과했습니다. [테스트 안내](tests/README.md) · [실행 증빙](tests/evidence/integration-2026-11-21.txt).
 
 ## 역할과 수정 위치
 
@@ -30,7 +30,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-첫 실행은 이미지 다운로드로 인터넷이 필요합니다. `.env`는 로컬 설정이며 GitHub에 올리지 않습니다. 관리자 기능 구현 후 각자의 `.env`에 실습 전용 비밀번호를 설정합니다. 기본 틀에는 비밀번호가 없습니다.
+첫 실행은 이미지 다운로드로 인터넷이 필요합니다. `.env`는 로컬 설정이며 GitHub에 올리지 않습니다. 실행 전에 `.env`의 `ADMIN_PASSWORD`에 실습 전용 비밀번호를 설정하세요. 비어 있으면 방화벽 컨테이너가 종료됩니다.
 
 ### 기본 틀 확인
 
@@ -42,12 +42,24 @@ docker compose exec web wget -qO- http://127.0.0.1/
 docker compose exec client-admin ip -4 addr
 docker compose exec client-guest ip -4 addr
 
-# 방화벽 초기화·TODO·기본 차단 확인
+# 방화벽 초기화·정책·기본 차단 확인
 docker compose logs firewall
 docker compose exec firewall iptables -nvL
 ```
 
-네 컨테이너가 실행되고 web이 healthy가 되는 것이 초기 목표입니다. **SSH 서버는 아직 시작되지 않습니다.**
+네 컨테이너가 실행되고 web이 healthy가 되면 [통합 테스트](tests/README.md)를 진행합니다.
+
+### 브라우저 시연 모드
+
+촬영할 때는 다음 명령으로 방화벽 TCP 80만 로컬 PC의 `127.0.0.1:8080`에 연결합니다. 웹서버에는 공개 포트를 추가하지 않습니다.
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.browser.yml up -d --no-build --wait
+```
+
+브라우저에서 `http://127.0.0.1:8080/`을 엽니다. 경로는 브라우저의 로컬 포트, 방화벽 외부 IP:80, DNAT·FORWARD·SNAT, 내부 웹서버 순서입니다. 2026-11-21 HTTP 200과 방화벽 DNAT·FORWARD 허용 규칙의 패킷 카운터 증가를 확인했습니다. 외부 PC에는 공개하지 않습니다.
+
+촬영 후 기본 모드로 돌아가려면 `docker compose up -d --no-build --force-recreate firewall`을 실행합니다. 통합 검사 스크립트도 기본 Compose 설정으로 실행하므로 브라우저용 포트 연결이 제거될 수 있습니다. 브라우저 장면을 찍을 때는 위 시연 모드를 다시 실행하세요.
 
 ### 수정 반영 / 종료
 
@@ -116,12 +128,17 @@ docker compose down
 - **설정 변수 누락:** 루트에서 `.env.example`을 `.env`로 복사했는지 확인합니다.
 - **네트워크 대역 충돌:** 다른 Docker 네트워크·VPN 대역을 확인하고 가원과 협의해 주소를 조정합니다.
 - **줄바꿈·실행 권한 오류:** 스크립트는 LF를 사용합니다. 실행 권한은 Dockerfile에서 설정합니다.
-- **방화벽 경유 HTTP·SSH 실패:** 현재 TODO 상태에서는 정상입니다. 구현 후 테스트 안내로 검증합니다.
+- **방화벽 컨테이너 종료:** `.env`의 `ADMIN_PASSWORD`가 비어 있지 않은지 확인하고 `docker compose logs firewall`을 확인합니다.
 
-## 초기 버전 검증 상태
+## 초기 버전 검증 기록과 현재 상태
 
 - Compose 구성 파싱, IP 대역·중복, 웹서버 네트워크 분리, 셸 문법 검사를 통과했습니다.
-- 실제 이미지 빌드·컨테이너 기동은 아직 검증하지 않았습니다. 작성 환경에서 Docker 소켓 접근 권한이 제한되어 있으므로, 첫 실행 시 위 기본 틀 확인 절차를 수행하세요.
-- HTTP 정책과 관리자 인증은 담당자의 TODO이며, 기능 테스트와 캡처도 구현 후 진행합니다.
+- **2026-11-17 macOS / ARM64에서 기본 실행을 확인했습니다.** 문가원이 `docker compose up -d --build`를 실행한 후 Docker Desktop의 Logs·Inspect에서 네 컨테이너 실행, 웹서버 `healthy` 및 자체 HTTP 200 응답, 각 컨테이너의 네트워크·IP를 확인했습니다.
+- 당시 방화벽 공통 초기화와 두 TODO 스크립트의 호출이 오류 없이 완료됐습니다. 이 기록은 [초기 틀 실행 기록](infra/README.md#기본-실행-확인--2026-11-17)이며 현재 통합 코드의 실행 결과가 아닙니다.
+- 담당자 코드 반영 후 셸 문법, Compose 구성, diff 검사를 통과했습니다. 초기 통합 검사에서는 HTTP·INPUT 차단과 관리자 정상 로그인을 확인했습니다.
+- **2026-11-21 로컬 macOS / Docker Linux ARM64에서 최종 통합 검사를 완료했습니다.** `sh tests/run-integration.sh --recreate` 실행 결과 최초 19개와 실제 `down` → `up --no-build` 재생성 후 같은 19개 모두 통과했습니다. 관리자 정상 ID/PW 로그인, 잘못된 비밀번호·존재하지 않는 ID의 인증 거부, 비인가 SSH 차단, INPUT/FORWARD 카운터 증가, 내부 웹 IP 직접 접근 차단을 확인했습니다. root는 금지 설정과 관리자 비밀번호를 사용한 접속 시도의 거부를 확인했으며 유효한 root 비밀번호를 시험한 것은 아닙니다.
+- 정적 경로를 추가하면 웹서버 IP 직접 HTTP 접근이 허용되던 규칙을 수정했습니다. HTTP 허용·SNAT에 DNAT 전 원래 목적지가 방화벽 외부 IP:80이라는 조건을 추가했고, 같은 경로에서 직접 접근 실패와 FORWARD DROP 카운터 증가를 확인했습니다.
+
+로컬 `.env`에 `ADMIN_PASSWORD`를 설정한 뒤 `sh tests/run-integration.sh --recreate > tests/integration-completion.log 2>&1`로 전체 검사를 다시 실행할 수 있습니다. 전체 로그는 Git에서 제외되며, 비밀번호를 포함하지 않는 [실행 증빙](tests/evidence/integration-2026-11-21.txt)을 별도로 저장했습니다. PPT·시연 영상·LMS 제출물은 이 로컬 폴더에 없어 완료 여부를 확인하지 못했습니다.
 
 공식 참고: [Docker 브리지](https://docs.docker.com/engine/network/drivers/bridge/) · [Docker Desktop 네트워크](https://docs.docker.com/desktop/features/networking/networking-how-tos/).
