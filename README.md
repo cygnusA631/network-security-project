@@ -49,6 +49,18 @@ docker compose exec firewall iptables -nvL
 
 네 컨테이너가 실행되고 web이 healthy가 되면 [통합 테스트](tests/README.md)를 진행합니다.
 
+### 브라우저 시연 모드
+
+촬영할 때는 다음 명령으로 방화벽 TCP 80만 로컬 PC의 `127.0.0.1:8080`에 연결합니다. 웹서버에는 공개 포트를 추가하지 않습니다.
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.browser.yml up -d --no-build --wait
+```
+
+브라우저에서 `http://127.0.0.1:8080/`을 엽니다. 경로는 브라우저의 로컬 포트, 방화벽 외부 IP:80, DNAT·FORWARD·SNAT, 내부 웹서버 순서입니다. 2026-11-21 HTTP 200과 방화벽 DNAT·FORWARD 허용 규칙의 패킷 카운터 증가를 확인했습니다. 외부 PC에는 공개하지 않습니다.
+
+촬영 후 기본 모드로 돌아가려면 `docker compose up -d --no-build --force-recreate firewall`을 실행합니다. 통합 검사 스크립트도 기본 Compose 설정으로 실행하므로 브라우저용 포트 연결이 제거될 수 있습니다. 브라우저 장면을 찍을 때는 위 시연 모드를 다시 실행하세요.
+
 ### 수정 반영 / 종료
 
 ```sh
