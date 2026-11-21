@@ -1,13 +1,13 @@
 # 테스트·증빙 — 정서윤 중심, 담당자별 확인
 
-아래는 **구현 후 확인할 목표**이며 통과 기록이 아닙니다. 기본 틀에는 HTTP 포워딩과 관리자 로그인이 없습니다.
+아래는 **통합 후 확인할 목표**이며 통과 기록이 아닙니다. 각 담당자의 로컬 테스트 기록은 통합 환경의 검증을 대신하지 않습니다.
 
 | 항목 | 완료 시 기대 결과 | 상태 |
 | --- | --- | --- |
-| 웹서버 자체 기동 | web 내부에서 HTML 응답 | 확인 필요 |
-| HTTP 허용 | 두 클라이언트 모두 방화벽 경유 HTML 응답 | TODO |
-| 다른 TCP·UDP 등 차단 | 차단 + 대응 규칙/정책 카운터 증가 | TODO |
-| 관리자 정상 로그인 | client-admin에서 올바른 ID/PW 성공 | TODO |
+| 웹서버 자체 기동 | web 내부에서 HTML 응답 | 2026-11-21 자동 검사 통과 |
+| HTTP 허용 | 두 클라이언트 모두 방화벽 경유 HTML 응답 | 2026-11-21 자동 검사 통과 |
+| 다른 TCP·UDP 등 차단 | 차단 + 대응 규칙/정책 카운터 증가 | TCP 22·443/UDP 9999 INPUT 검사 통과, FORWARD 미검증 |
+| 관리자 정상 로그인 | client-admin에서 올바른 ID/PW 성공 | 2026-11-21 사용자 확인 |
 | 비밀번호 오류 | client-admin에서 잘못된 ID/PW 실패 | TODO |
 | 비인가 IP | client-guest에서 SSH 접속 차단 | TODO |
 | 내부망 우회 방지 | client-guest의 웹서버 IP 직접 접속 실패 | TODO |
@@ -21,7 +21,7 @@
 # 웹서버 자체 기동 (방화벽 검증 아님)
 docker compose exec web wget -qO- http://127.0.0.1/
 
-# 방화벽 경유 HTTP (정책 구현 전에는 실패)
+# 방화벽 경유 HTTP
 docker compose exec client-admin curl --connect-timeout 3 --max-time 5 http://172.30.10.254/
 docker compose exec client-guest curl --connect-timeout 3 --max-time 5 http://172.30.10.254/
 
@@ -51,4 +51,4 @@ docker compose exec firewall iptables -t nat -nvL
 - 몇 개 포트 테스트와 전체 기본 DROP 규칙을 함께 제시합니다. 모든 포트를 개별 검사했다고 쓰지 않습니다.
 - `docker compose exec firewall sh`는 운영자 디버깅이며 ID/PW 인증을 검증하는 SSH 접속을 대체하지 않습니다.
 
-`evidence/`에 캡처·실제 결과·명령·촬영 날짜를 기록합니다. 비밀번호와 개인정보는 가리고 전달하세요.
+`evidence/`에 캡처·실제 결과·명령·촬영 날짜를 기록합니다. 자동 검사 결과는 로컬 `integration-result.log`에서 확인할 수 있습니다. 비밀번호와 개인정보는 가리고 전달하세요.

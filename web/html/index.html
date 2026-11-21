@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Network Security Project</title>
+  <title>Network Security Project — Web Server</title>
   <style>
     body { margin: 0; padding: 48px 24px; background: #f3f7fc; color: #17263b;
       font-family: system-ui, -apple-system, sans-serif; }
@@ -16,12 +16,17 @@
 </head>
 <body>
   <main>
-    <p aria-hidden="true">🐳 🦫 🦊 🐢 🦜</p>
+    <p aria-hidden="true">🐳 🦫 🦊 🐢 🦜 · 네트워크 보안 14주차 프로젝트</p>
     <h1>웹서버 접속 성공</h1>
-    <p>네트워크 보안 프로젝트의 확인용 웹페이지입니다.</p>
-    <p>서비스: <code>Nginx</code> · 프로토콜: <code>HTTP / TCP 80</code></p>
-    <p>이 페이지는 웹서버 응답을 의미합니다.<br>
-      방화벽 경유 여부와 차단 정책은 별도 테스트로 확인합니다.</p>
+    <p>Docker 컨테이너 기반으로 외부망과 내부망을 분리하고,
+      방화벽을 거쳐 내부 웹서버로 연결되는 안전한 Linux 웹서버 구축 실습 페이지입니다.</p>
+    <div class="info">
+      <div><strong>웹서버 이미지:</strong> <code>nginx:1.28-alpine</code></div>
+      <div><strong>서비스 포트:</strong> <code>HTTP / TCP 80</code></div>
+      <div><strong>네트워크 위치:</strong> 내부망 <code>internal_net</code> 전용</div>
+    </div>
+    <p>이 페이지는 웹서버의 HTTP(TCP 80) 응답을 의미합니다.<br>
+      방화벽 경유 여부와 차단 정책, 관리자 인증은 별도 테스트로 확인합니다.</p>
   </main>
 </body>
 </html>

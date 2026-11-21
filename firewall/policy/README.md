@@ -1,6 +1,6 @@
 # 트래픽 정책 — 임수영
 
-`apply.sh`의 TODO를 구현합니다. 공통 체인이 생성된 뒤 시작 시 한 번 호출됩니다.
+`apply.sh`에 HTTP DNAT, 새 연결 허용, 응답 경로 SNAT 규칙이 있습니다. 공통 체인이 생성된 뒤 시작 시 한 번 호출됩니다.
 
 1. `$FW_EXTERNAL_IP`의 TCP 80 요청을 `$WEB_IP:80`으로 DNAT합니다.
 2. `TEAM_FORWARD`에서 해당 HTTP 전달을 허용합니다.
