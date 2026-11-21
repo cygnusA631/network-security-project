@@ -2,7 +2,7 @@
 
 Docker 외부망·내부망을 분리하고 방화벽을 거쳐 웹서버에 접근하는 네트워크 보안 수업 과제입니다.
 
-> 세 담당자의 웹서버·HTTP 정책·관리자 SSH 코드를 통합했습니다. 자동 HTTP·INPUT 차단 검사와 관리자 정상 로그인을 확인했습니다. 남은 검사는 [테스트 안내](tests/README.md)에 정리했습니다.
+> 세 담당자의 웹서버·HTTP 정책·관리자 SSH 코드를 통합했습니다. 2026-11-21 로컬에서 인증·INPUT/FORWARD 차단·내부망 우회 방지 및 재생성 후 재검사까지 총 38개 자동 검사를 통과했습니다. [테스트 안내](tests/README.md) · [실행 증빙](tests/evidence/integration-2026-11-21.txt).
 
 ## 역할과 수정 위치
 
@@ -123,8 +123,10 @@ docker compose down
 - Compose 구성 파싱, IP 대역·중복, 웹서버 네트워크 분리, 셸 문법 검사를 통과했습니다.
 - **2026-11-17 macOS / ARM64에서 기본 실행을 확인했습니다.** 문가원이 `docker compose up -d --build`를 실행한 후 Docker Desktop의 Logs·Inspect에서 네 컨테이너 실행, 웹서버 `healthy` 및 자체 HTTP 200 응답, 각 컨테이너의 네트워크·IP를 확인했습니다.
 - 당시 방화벽 공통 초기화와 두 TODO 스크립트의 호출이 오류 없이 완료됐습니다. 이 기록은 [초기 틀 실행 기록](infra/README.md#기본-실행-확인--2026-11-17)이며 현재 통합 코드의 실행 결과가 아닙니다.
-- 담당자 코드 반영 후 셸 문법, Compose 구성, diff 검사를 통과했습니다. 2026-11-21 사용자 로컬 실행 결과 `tests/run-integration.sh` 자동 검사 실패 0건: 웹서버 및 두 클라이언트 HTTP 성공, 비인가 TCP 22·443와 UDP 9999의 INPUT DROP 카운터 증가, 관리자 IP의 SSH 포트 연결, root 로그인 금지 설정 확인. 사용자가 별도로 관리자 비밀번호 로그인 성공을 확인했습니다.
+- 담당자 코드 반영 후 셸 문법, Compose 구성, diff 검사를 통과했습니다. 초기 통합 검사에서는 HTTP·INPUT 차단과 관리자 정상 로그인을 확인했습니다.
+- **2026-11-21 로컬 macOS / Docker Linux ARM64에서 최종 통합 검사를 완료했습니다.** `sh tests/run-integration.sh --recreate` 실행 결과 최초 19개와 실제 `down` → `up --no-build` 재생성 후 같은 19개 모두 통과했습니다. 관리자 정상 ID/PW 로그인, 잘못된 비밀번호·존재하지 않는 ID의 인증 거부, 비인가 SSH 차단, INPUT/FORWARD 카운터 증가, 내부 웹 IP 직접 접근 차단을 확인했습니다. root는 금지 설정과 관리자 비밀번호를 사용한 접속 시도의 거부를 확인했으며 유효한 root 비밀번호를 시험한 것은 아닙니다.
+- 정적 경로를 추가하면 웹서버 IP 직접 HTTP 접근이 허용되던 규칙을 수정했습니다. HTTP 허용·SNAT에 DNAT 전 원래 목적지가 방화벽 외부 IP:80이라는 조건을 추가했고, 같은 경로에서 직접 접근 실패와 FORWARD DROP 카운터 증가를 확인했습니다.
 
-로컬 `.env`에 `ADMIN_PASSWORD`를 설정한 뒤 `sh tests/run-integration.sh > tests/integration-result.log 2>&1`로 빌드·HTTP·INPUT 차단 검사를 다시 실행할 수 있습니다. 결과 로그는 Git에서 제외됩니다. 잘못된 비밀번호, 실제 root 로그인 거부, FORWARD 차단, 내부망 우회, 재생성 후 검사는 [테스트 안내](tests/README.md)를 참고하세요.
+로컬 `.env`에 `ADMIN_PASSWORD`를 설정한 뒤 `sh tests/run-integration.sh --recreate > tests/integration-completion.log 2>&1`로 전체 검사를 다시 실행할 수 있습니다. 전체 로그는 Git에서 제외되며, 비밀번호를 포함하지 않는 [실행 증빙](tests/evidence/integration-2026-11-21.txt)을 별도로 저장했습니다. PPT·시연 영상·LMS 제출물은 이 로컬 폴더에 없어 완료 여부를 확인하지 못했습니다.
 
 공식 참고: [Docker 브리지](https://docs.docker.com/engine/network/drivers/bridge/) · [Docker Desktop 네트워크](https://docs.docker.com/desktop/features/networking/networking-how-tos/).

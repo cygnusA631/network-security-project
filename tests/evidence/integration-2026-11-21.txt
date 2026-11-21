@@ -1,0 +1,226 @@
+Network Security Project — 통합 검증 실행 증빙
+실행 시각 (KST): 2026-11-21 11:47:00
+환경: macOS / Docker Engine Linux aarch64 (ARM64)
+Docker Client 29.7.2 / Server 29.9.2
+명령: sh tests/run-integration.sh --recreate > tests/integration-completion.log 2>&1
+종료 코드: 0
+첫 19개 + down/up --no-build 재생성 후 동일 19개 = 통과 38, 실패 0
+아래는 빌드 출력 이후의 실제 실행 결과입니다. 줄끝 공백만 제거했습니다.
+
+=== 최초 실행 검사 ===
+PASS: 웹서버 자체 HTTP 응답
+PASS: client-admin 방화벽 경유 HTTP
+PASS: client-guest 방화벽 경유 HTTP
+PASS: INPUT 기본 DROP 정책
+PASS: FORWARD 기본 DROP 정책
+PASS: 비인가 클라이언트 TCP 22 실패 + INPUT DROP 증가 (0 -> 3)
+PASS: 비인가 클라이언트 TCP 443 실패 + INPUT DROP 증가 (3 -> 6)
+PASS: UDP 9999 INPUT DROP 증가 (6 -> 7)
+PASS: 관리자 IP에서 SSH 포트 연결 (인증은 아래 별도 검사)
+PASS: root SSH 로그인 금지 설정
+PASS: 관리자 올바른 ID/PW SSH 로그인 + 원격 id 일치
+PASS: 관리자 잘못된 비밀번호: SSH Permission denied 확인
+PASS: 존재하지 않는 사용자: SSH Permission denied 확인
+PASS: root 로그인 시도 (관리자 비밀번호 사용; root 비밀번호 유효성 미검증): SSH Permission denied 확인
+PASS: 기본 클라이언트에서 내부 웹 IP 직접 HTTP 접근 실패
+PASS: 테스트 경로 추가 후 방화벽 외부 IP HTTP 대조 성공
+PASS: 내부 웹 IP 직접 TCP 80 우회 실패 + FORWARD DROP 증가 (0 -> 3)
+PASS: 내부 웹 IP TCP 443 실패 + FORWARD DROP 증가 (3 -> 6)
+PASS: UDP 9999 FORWARD DROP 증가 (6 -> 7)
+NAME                                      IMAGE                                                                     COMMAND                  SERVICE        CREATED          STATUS                    PORTS
+network-security-project-client-admin-1   network-security-project-client-admin                                     "sleep infinity"         client-admin   32 seconds ago   Up 31 seconds
+network-security-project-client-guest-1   network-security-project-client-guest                                     "sleep infinity"         client-guest   32 seconds ago   Up 31 seconds
+network-security-project-firewall-1       sha256:ffbdc39ab1c03d9be9abcd6b608ae2e97c40e2a411f37e2d19221bc3ef420a8c   "/opt/firewall/entry…"   firewall       53 seconds ago   Up 53 seconds
+network-security-project-web-1            sha256:071566ce646475ed8ba167a40050c81c9b5498be5c1a5e1607c6934273666ab5   "/docker-entrypoint.…"   web            14 minutes ago   Up 14 minutes (healthy)   80/tcp
+Chain INPUT (policy DROP 7 packets, 397 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 ACCEPT     0    --  lo     *       0.0.0.0/0            0.0.0.0/0
+      59    14136 ACCEPT     0    --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+      12      697 TEAM_INPUT  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain FORWARD (policy DROP 7 packets, 397 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+      33     7203 ACCEPT     0    --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+      10      577 TEAM_FORWARD  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain OUTPUT (policy ACCEPT 58 packets, 16207 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+
+Chain TEAM_FORWARD (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       3      180 ACCEPT     6    --  *      *       0.0.0.0/0            172.30.20.10         tcp dpt:80 ctstate NEW ctorigdst 172.30.10.254 ctorigdstport 80
+
+Chain TEAM_INPUT (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       5      300 ACCEPT     6    --  *      *       172.30.10.10         0.0.0.0/0            tcp dpt:22
+Chain PREROUTING (policy ACCEPT 19 packets, 1094 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+      22     1274 TEAM_PREROUTING  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 DOCKER_OUTPUT  0    --  *      *       0.0.0.0/0            127.0.0.11
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 DOCKER_POSTROUTING  0    --  *      *       0.0.0.0/0            127.0.0.11
+       3      180 TEAM_POSTROUTING  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain DOCKER_OUTPUT (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 DNAT       6    --  *      *       0.0.0.0/0            127.0.0.11           tcp dpt:53 to:127.0.0.11:46325
+       0        0 DNAT       17   --  *      *       0.0.0.0/0            127.0.0.11           udp dpt:53 to:127.0.0.11:49388
+
+Chain DOCKER_POSTROUTING (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 SNAT       6    --  *      *       127.0.0.11           0.0.0.0/0            tcp spt:46325 to::53
+       0        0 SNAT       17   --  *      *       127.0.0.11           0.0.0.0/0            udp spt:49388 to::53
+
+Chain TEAM_POSTROUTING (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       3      180 SNAT       6    --  *      *       0.0.0.0/0            172.30.20.10         tcp dpt:80 ctorigdst 172.30.10.254 ctorigdstport 80 to:172.30.20.254
+
+Chain TEAM_PREROUTING (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       3      180 DNAT       6    --  *      *       0.0.0.0/0            172.30.10.254        tcp dpt:80 to:172.30.20.10:80
+
+컨테이너·네트워크를 down/up으로 재생성합니다.
+ Container network-security-project-client-admin-1 Stopping
+ Container network-security-project-web-1 Stopping
+ Container network-security-project-client-guest-1 Stopping
+ Container network-security-project-firewall-1 Stopping
+ Container network-security-project-client-admin-1 Stopped
+ Container network-security-project-client-admin-1 Removing
+ Container network-security-project-client-admin-1 Removed
+ Container network-security-project-client-guest-1 Stopped
+ Container network-security-project-client-guest-1 Removing
+ Container network-security-project-web-1 Stopped
+ Container network-security-project-web-1 Removing
+ Container network-security-project-client-guest-1 Removed
+ Container network-security-project-web-1 Removed
+ Container network-security-project-firewall-1 Stopped
+ Container network-security-project-firewall-1 Removing
+ Container network-security-project-firewall-1 Removed
+ Network network-security-project_external_net Removing
+ Network network-security-project_internal_net Removing
+ Network network-security-project_internal_net Removed
+ Network network-security-project_external_net Removed
+ Network network-security-project_external_net Creating
+ Network network-security-project_internal_net Creating
+ Network network-security-project_external_net Creating
+ Network network-security-project_internal_net Creating
+ Network network-security-project_external_net Created
+ Network network-security-project_external_net Created
+ Container network-security-project-client-admin-1 Creating
+ Container network-security-project-client-guest-1 Creating
+ Network network-security-project_internal_net Created
+ Network network-security-project_internal_net Created
+ Container network-security-project-web-1 Creating
+ Container network-security-project-firewall-1 Creating
+ Container network-security-project-client-guest-1 Created
+ Container network-security-project-client-admin-1 Created
+ Container network-security-project-firewall-1 Created
+ Container network-security-project-web-1 Created
+ Container network-security-project-client-admin-1 Starting
+ Container network-security-project-client-guest-1 Starting
+ Container network-security-project-firewall-1 Starting
+ Container network-security-project-web-1 Starting
+ Container network-security-project-client-admin-1 Started
+ Container network-security-project-client-guest-1 Started
+ Container network-security-project-firewall-1 Started
+ Container network-security-project-web-1 Started
+ Container network-security-project-firewall-1 Waiting
+ Container network-security-project-web-1 Waiting
+ Container network-security-project-client-admin-1 Waiting
+ Container network-security-project-client-guest-1 Waiting
+ Container network-security-project-client-guest-1 Healthy
+ Container network-security-project-client-admin-1 Healthy
+ Container network-security-project-firewall-1 Healthy
+ Container network-security-project-web-1 Healthy
+
+=== 재생성 후 동일 검사 ===
+PASS: 웹서버 자체 HTTP 응답
+PASS: client-admin 방화벽 경유 HTTP
+PASS: client-guest 방화벽 경유 HTTP
+PASS: INPUT 기본 DROP 정책
+PASS: FORWARD 기본 DROP 정책
+PASS: 비인가 클라이언트 TCP 22 실패 + INPUT DROP 증가 (0 -> 3)
+PASS: 비인가 클라이언트 TCP 443 실패 + INPUT DROP 증가 (3 -> 6)
+PASS: UDP 9999 INPUT DROP 증가 (6 -> 7)
+PASS: 관리자 IP에서 SSH 포트 연결 (인증은 아래 별도 검사)
+PASS: root SSH 로그인 금지 설정
+PASS: 관리자 올바른 ID/PW SSH 로그인 + 원격 id 일치
+PASS: 관리자 잘못된 비밀번호: SSH Permission denied 확인
+PASS: 존재하지 않는 사용자: SSH Permission denied 확인
+PASS: root 로그인 시도 (관리자 비밀번호 사용; root 비밀번호 유효성 미검증): SSH Permission denied 확인
+PASS: 기본 클라이언트에서 내부 웹 IP 직접 HTTP 접근 실패
+PASS: 테스트 경로 추가 후 방화벽 외부 IP HTTP 대조 성공
+PASS: 내부 웹 IP 직접 TCP 80 우회 실패 + FORWARD DROP 증가 (0 -> 3)
+PASS: 내부 웹 IP TCP 443 실패 + FORWARD DROP 증가 (3 -> 6)
+PASS: UDP 9999 FORWARD DROP 증가 (6 -> 7)
+NAME                                      IMAGE                                   COMMAND                  SERVICE        CREATED          STATUS                    PORTS
+network-security-project-client-admin-1   network-security-project-client-admin   "sleep infinity"         client-admin   41 seconds ago   Up 41 seconds
+network-security-project-client-guest-1   network-security-project-client-guest   "sleep infinity"         client-guest   41 seconds ago   Up 41 seconds
+network-security-project-firewall-1       network-security-project-firewall       "/opt/firewall/entry…"   firewall       41 seconds ago   Up 41 seconds
+network-security-project-web-1            network-security-project-web            "/docker-entrypoint.…"   web            41 seconds ago   Up 41 seconds (healthy)   80/tcp
+Chain INPUT (policy DROP 7 packets, 397 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 ACCEPT     0    --  lo     *       0.0.0.0/0            0.0.0.0/0
+      59    14136 ACCEPT     0    --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+      12      697 TEAM_INPUT  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain FORWARD (policy DROP 7 packets, 397 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+      33     7203 ACCEPT     0    --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+      10      577 TEAM_FORWARD  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain OUTPUT (policy ACCEPT 56 packets, 16103 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+
+Chain TEAM_FORWARD (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       3      180 ACCEPT     6    --  *      *       0.0.0.0/0            172.30.20.10         tcp dpt:80 ctstate NEW ctorigdst 172.30.10.254 ctorigdstport 80
+
+Chain TEAM_INPUT (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       5      300 ACCEPT     6    --  *      *       172.30.10.10         0.0.0.0/0            tcp dpt:22
+Chain PREROUTING (policy ACCEPT 21 packets, 1174 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+      24     1354 TEAM_PREROUTING  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 DOCKER_OUTPUT  0    --  *      *       0.0.0.0/0            127.0.0.11
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 DOCKER_POSTROUTING  0    --  *      *       0.0.0.0/0            127.0.0.11
+       3      180 TEAM_POSTROUTING  0    --  *      *       0.0.0.0/0            0.0.0.0/0
+
+Chain DOCKER_OUTPUT (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 DNAT       6    --  *      *       0.0.0.0/0            127.0.0.11           tcp dpt:53 to:127.0.0.11:36815
+       0        0 DNAT       17   --  *      *       0.0.0.0/0            127.0.0.11           udp dpt:53 to:127.0.0.11:37736
+
+Chain DOCKER_POSTROUTING (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       0        0 SNAT       6    --  *      *       127.0.0.11           0.0.0.0/0            tcp spt:36815 to::53
+       0        0 SNAT       17   --  *      *       127.0.0.11           0.0.0.0/0            udp spt:37736 to::53
+
+Chain TEAM_POSTROUTING (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       3      180 SNAT       6    --  *      *       0.0.0.0/0            172.30.20.10         tcp dpt:80 ctorigdst 172.30.10.254 ctorigdstport 80 to:172.30.20.254
+
+Chain TEAM_PREROUTING (1 references)
+    pkts      bytes target     prot opt in     out     source               destination
+       3      180 DNAT       6    --  *      *       0.0.0.0/0            172.30.10.254        tcp dpt:80 to:172.30.20.10:80
+
+자동 검사 통과: 38
+자동 검사 실패: 0
+이 스크립트는 컨테이너를 실행 상태로 둡니다. 확인 후 docker compose stop으로 종료하세요.

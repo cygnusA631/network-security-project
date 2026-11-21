@@ -8,6 +8,8 @@
 
 ## 기본 실행 확인 — 2026-11-17
 
+아래는 초기 틀 당시의 기록입니다. 담당 코드 통합 이후의 현재 검증은 [테스트 안내](../tests/README.md)를 참고하세요.
+
 문가원의 macOS 환경에서 `docker compose up -d --build` 실행 후 Docker Desktop의 Logs·Inspect로 확인했습니다. 실행 이미지는 Linux / ARM64이며, GitHub에 연결된 `network_project` 폴더의 Compose 설정을 사용했습니다.
 
 | 대상 | 실행 상태 | 확인한 네트워크·IP |

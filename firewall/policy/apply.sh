@@ -8,6 +8,9 @@ set -eu
 # 나머지는 공통 FORWARD 기본 DROP을 유지합니다.
 # 전체 iptables 초기화·기본 정책 변경은 하지 않습니다.
 
-iptables -t nat -A TEAM_PREROUTING -p tcp -d "$FW_EXTERNAL_IP" --dport 80 -j DNAT --to-destination "$WEB_IP:80"
-iptables -A TEAM_FORWARD -p tcp -d "$WEB_IP" --dport 80 -m conntrack --ctstate NEW -j ACCEPT
-iptables -t nat -A TEAM_POSTROUTING -p tcp -d "$WEB_IP" --dport 80 -j SNAT --to-source "$FW_INTERNAL_IP"
+iptables -w -t nat -A TEAM_PREROUTING -p tcp -d "$FW_EXTERNAL_IP" --dport 80 -j DNAT --to-destination "$WEB_IP:80"
+# DNAT 전 목적지도 검사하여 WEB_IP로 직접 라우팅한 HTTP는 허용하지 않습니다.
+iptables -w -A TEAM_FORWARD -p tcp -d "$WEB_IP" --dport 80 \
+    -m conntrack --ctstate NEW --ctorigdst "$FW_EXTERNAL_IP" --ctorigdstport 80 -j ACCEPT
+iptables -w -t nat -A TEAM_POSTROUTING -p tcp -d "$WEB_IP" --dport 80 \
+    -m conntrack --ctorigdst "$FW_EXTERNAL_IP" --ctorigdstport 80 -j SNAT --to-source "$FW_INTERNAL_IP"
